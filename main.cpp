@@ -88,8 +88,13 @@ void part7()
     std::cout << "ft3 before: " << ft3 << std::endl;
 
     {
-        using Type = #4;
-        ft3.apply( [](std::unique...){} );
+        using Type = decltype(ft3)::Type;
+        using ReturnType = decltype(ft3);
+        ft3.apply( [&ft3](std::unique_ptr<NumType>& fNum)-> ReturnType&
+        {
+            *fNum += 7.0f;
+            return ft3;
+        });
     }
 
     std::cout << "ft3 after: " << ft3 << std::endl;
@@ -278,6 +283,118 @@ struct FloatType;
 struct DoubleType;
 struct IntType;
 
+template <typename NumericT>
+template <typename DivideType>
+struct Numeric
+{
+    using dType = DivideType;
+    using Type = NumericT;
+    Numeric(Type lhs);
+    operator Type();
+    Numeric& operator+=(Type rhs);
+    Numeric& operator-=(Type rhs);
+    Numeric& operator*=(Type rhs);
+    Numeric& operator/=(dType rhs);
+    Numeric& pow(Type rhs);
+
+    Numeric& apply(std::function<Numeric&(std::unique_ptr<Type>&)>) > func)
+    {
+        if(func)
+        {
+            return func(value);
+        }
+        return *this;
+    }
+
+    Numeric& apply(void(*functionP)(std::unique_ptr<Type>&))
+    {
+        if(functionP)
+        {
+            functionP(value);
+        }
+        return *this;
+    }
+
+private
+    std::unique_ptr<Type> value;
+    Numeric& powInternal(Type exp)
+    {
+        *value = static_cast<Type>(std::pow(*value, exp));
+        return *this;
+    }
+};
+
+    Numeric<Type>::Numeric(Type lhs) : *value(make::std_ptr<Type> lhs){}
+    operator Type() {return *value;}
+    Numeric& Numeric<Type>::operator+=(Type rhs){return (*this->value += rhs); }
+    Numeric& Numeric<Type>::operator-=(Type rhs){return (*this->value -= rhs); }
+    Numeric& Numeric<Type>::operator*=(Type rhs){return (*this->value *= rhs); }
+    Numeric& Numeric<Type>::pow(Type rhs){return powInternal(rhs);}
+    Numeric& Numeric<Type>::operator/=(dType rhs)
+    {
+        if constexpr(std::is_same<Type, int>::value)
+        {
+            if constexpr(std::is_same<dType, int>::value)
+            {
+                if (rhs==0)
+                {
+                    std::cout << "error: integer division by zero is an error and will crash the program!" << std::endl;
+                    return *this;
+                }
+            }
+            else if(std::abs(rhs)) < std::numeric_limits<Type>::epsilon())
+            {
+                std::cout << "warning: floating point division by zero!" << std::endl;
+            }
+            *this->value /= rhs;
+            return *this;
+        }
+        else if(std::abs(rhs) <std::numeric_limits<Type>::epsilon())
+        {
+            std::cout << "warning: floating point division by zero!" 
+            << std::endl;
+        }
+        *this->value /= rhs;
+        return *this;
+    }
+
+template<>
+struct Numeric<double>
+{
+    using Type = double;
+    Numeric(Type num);
+    Numeric(Type lhs);
+    operator Type();
+    Numeric& operator+=(Type rhs);
+    Numeric& operator-=(Type rhs);
+    Numeric& operator*=(Type rhs);
+    Numeric& operator/=(DivideType rhs);
+    Numeric& pow(Type rhs);
+
+    Numeric& apply(std::function(std::unique_ptr<double>&) functionP)
+    {
+        
+    }
+
+private:
+    std::make_ptr<Type> value;
+    Numeric& powInternal(Type rhs);
+};
+
+    Numeric& Numeric<double>::operator+=(Type rhs){return (*this->value += rhs); }
+    Numeric& Numeric<double>::operator-=(Type rhs){return (*this->value -= rhs); }
+    Numeric& Numeric<double>::operator*=(Type rhs){return (*this->value *= rhs); }
+    Numeric& Numeric<double>::pow(Type rhs){return powInternal(rhs);}
+    Numeric& Numeric<double>::operator/=(Type rhs)
+    {
+        if（rhs == 0.0）
+        {
+            std::cout << "warning: floating point division by zero!" << std::endl;
+        }
+        *this->value /= rhs;
+        return *this; 
+    }
+/*
 struct FloatType 
 {
 
@@ -303,9 +420,14 @@ struct FloatType
     operator float() const { return *value;}
 
 private:
-    float *value;
+    std::unique_ptr<Type> value;
     FloatType& powInternal(float exp);
 };
+
+struct Divide
+{
+
+}
 
 struct DoubleType 
 {
@@ -586,7 +708,7 @@ IntType& IntType::apply(void(*funcPtr)(int&))
     }
     return *this;
 }
-
+*/
 // Point
 struct Point
 {
@@ -770,7 +892,7 @@ void part4()
     std::cout << "---------------------\n" << std::endl;
 }
 
-void part6()
+/*void part6()
 {
     FloatType ft3(3.0f);
     DoubleType dt3(4.0);
@@ -818,7 +940,7 @@ void part6()
     std::cout << "it3 after: " << it3 << std::endl;
     std::cout << "---------------------\n" << std::endl;    
 }
-
+*/
 int main() 
 {
 	// testing instruction 0
@@ -897,7 +1019,7 @@ int main()
 
     part4();
 
-    part6();
+    // part6();
 
     std::cout << "good to go!\n";
 
